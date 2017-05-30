@@ -1,7 +1,7 @@
 <template>
 <div class="container">
 
-  <auto-completer></auto-completer>
+  <auto-completer v-on:placeSelected="getWeatherByInput"></auto-completer>
 
   <weather-grabber v-on:getWeatherByCoords="getWeather"></weather-grabber>
 
@@ -72,7 +72,7 @@ export default {
 
             this.loading = true;
 
-            const success = function (pos) {
+            const success = (pos) => {
                 this.coords.lat = pos.coords.latitude;
                 this.coords.lon = pos.coords.longitude;
 
@@ -90,16 +90,29 @@ export default {
                     })
             };
 
-            const error = function () {
+            const error = () => {
                 this.loading = false;
                 this.geolocationDenied = true;
             };
 
-            navigator.geolocation.getCurrentPosition(success.bind(this), error.bind(this));
+            navigator.geolocation.getCurrentPosition(success, error);
 
         },
         getWeather: function(){
             ("geolocation" in navigator) ? this.getWeatherByCoords() : '';
+        },
+        getWeatherByInput: function(place){
+                this.loading = true;
+
+                axios.get(`http://api.openweathermap.org/data/2.5/weather?q=${place.name}&APPID=${this.APIKEY}`)
+                    .then(raw => {
+                        this.weather.city = raw.data.name;
+                        this.weather.main = raw.data.weather[0].main;
+                        this.weather.temp = raw.data.main.temp;
+
+                        this.loading = false;
+                        this.weather.dataReceived = true;
+                    })
         }
     }
 }
