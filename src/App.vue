@@ -30,9 +30,15 @@
     </div>
   </div>
 
-  <transition name="fade">
-    <weather-card :weather="weather"></weather-card>
-  </transition>
+
+  <h1 v-if="dataReceived">{{ city }}</h1>
+
+  <transition-group name="fade">
+    <div class="card-columns" :key="1">
+      <weather-card v-for="weather in weatherDays" v-bind:key="weather.dt" :weather="weather" :dataReceived="dataReceived"></weather-card>
+
+    </div>
+  </transition-group>
 
 </div>
 </template>
@@ -59,12 +65,11 @@ export default {
                 lon: null
             },
             loading: false,
-            weather: {
-                city: '',
-                main: '',
-                temp: '',
-                dataReceived: false
-            }
+            weatherDays: [
+
+            ],
+            city: null,
+            dataReceived: false
         }
     },
     methods: {
@@ -86,7 +91,7 @@ export default {
                         this.weather.temp = raw.data.main.temp;
 
                         this.loading = false;
-                        this.weather.dataReceived = true;
+                        this.dataReceived = true;
                     })
             };
 
@@ -104,14 +109,15 @@ export default {
         getWeatherByInput: function(place){
                 this.loading = true;
 
-                axios.get(`http://api.openweathermap.org/data/2.5/weather?q=${place.name}&APPID=${this.APIKEY}`)
+                axios.get(`http://api.openweathermap.org/data/2.5/forecast/daily?q=${place.name}&mode=json&APPID=${this.APIKEY}&cnt=16`)
                     .then(raw => {
-                        this.weather.city = raw.data.name;
-                        this.weather.main = raw.data.weather[0].main;
-                        this.weather.temp = raw.data.main.temp;
+
+                        console.log(raw)
+                        this.weatherDays = raw.data.list;
+                        this.city = raw.data.city.name;
 
                         this.loading = false;
-                        this.weather.dataReceived = true;
+                        this.dataReceived = true;
                     })
         }
     }
@@ -135,15 +141,13 @@ export default {
     background: #2B3134;
     color: #777;
     text-align: center;
-    font-family: "Gill sans", sans-serif;
+    font-family: Futura, sans-serif;
     width: 80%;
     margin: 0 auto;
   }
   h1{
     margin: 1em 0;
-    border-bottom: 1px dashed;
-    padding-bottom: 1em;
-    font-weight: lighter;
+    font-weight: bold;
   }
   p{
     font-style: italic;
